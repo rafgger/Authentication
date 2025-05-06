@@ -59,12 +59,31 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  // console.log(username);
-  // console.log(password);
+  // console.log(req.body.username);
+  // console.log(req.body.password);
+  const email = req.body.username;
+  const password = req.body.password;
 
-  console.log(req.body.username);
-  console.log(req.body.password);
-  
+  try {
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+    if (result.rows.length > 0){
+      console.log(result.rows);      
+      const user = result.rows[0];
+      const storedPassword = user.password;
+
+      if (password === storedPassword){
+        res.render("secrets.ejs");
+      } else {
+        res.send("Incorrect Password");
+      }
+    } else {
+      res.send("User not found");
+    }
+  } catch (err) {
+    console.log(err);    
+  }  
 });
 
 app.listen(port, () => {
