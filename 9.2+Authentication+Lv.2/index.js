@@ -82,7 +82,7 @@ app.post("/login", async (req, res) => {
           console.log("Error comparing passwords:", err);
         } else {
           console.log(result); 
-          // if (result) {s
+          if (result) {
             res.render("secrets.ejs");
           } else {
             res.send("Incorrect Password");
