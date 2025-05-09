@@ -56,11 +56,36 @@ app.get("/logout", (req, res) => {
   });
 });
 
-app.get("/secrets", (req, res) => {
-  if (req.isAuthenticated()) {
-    res.render("secrets.ejs");
+app.get("/secrets", async (req, res) => {
+  console.log(req.user);
 
-    //TODO: Update this to pull in the user secret to render in secrets.ejs
+  ////////////////UPDATED GET SECRETS ROUTE/////////////////
+  if (req.isAuthenticated()) {
+    try {
+      const result = await db.query(
+        `SELECT secret FROM users WHERE email = $1`,
+        [req.user.email]
+      );
+      console.log(result);
+      const secret = result.rows[0].secret;
+      if (secret) {
+        res.render("secrets.ejs", { secret: secret });
+      } else {
+        res.render("secrets.ejs", { secret: "Jack Bauer is my hero." });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  } else {
+    res.redirect("/login");
+  }
+});
+
+////////////////SUBMIT GET ROUTE/////////////////
+app.get("/submit", function (req, res) {
+  if (req.isAuthenticated()) {
+    res.render("submit.ejs")
+    //TODO: Update this to pull in the user secret to render in secrets.ejs   
   } else {
     res.redirect("/login");
   }
@@ -127,6 +152,19 @@ app.post("/register", async (req, res) => {
 
 //TODO: Create the post route for submit.
 //Handle the submitted data and add it to the database
+app.post("/submit", async function (req, res) {
+  const submittedSecret = req.body.secret;
+  console.log(req.user);
+  try {
+    await db.query(`UPDATE users SET secret = $1 WHERE email = $2`, [
+      submittedSecret,
+      req.user.email,
+    ]);
+    res.redirect("/secrets");
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 passport.use(
   "local",
